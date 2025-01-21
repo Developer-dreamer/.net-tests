@@ -82,4 +82,5 @@ public class Tests
         Assert.That(output, Does.Contain("Reversed polish notation: 6, 2, /"));
         Assert.That(output, Does.Contain("Result: 3"));
     }
+    
 }
