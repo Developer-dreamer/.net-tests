@@ -22,5 +22,5 @@ jobs:
       - name: Build
         run: dotnet build --no-restore
       - name: Test
-        run: dotnet test CalculatorTests/CalculatorTests.csproj --no-build --verbosity normal --configuration Release
+        run: dotnet test CalculatorTests/CalculatorTests.csproj --no-build --verbosity normal
 
