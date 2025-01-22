@@ -40,47 +40,49 @@ public class Tests
     }
 
     [Test]
-    public async Task Sum()
+    public async Task HasTokenization()
     {
-        string output = await RunCalculatorAsync("3+5");
-
-        // Validate output
-        Assert.That(output, Does.Contain("Tokens: 3, +, 5"));
-        Assert.That(output, Does.Contain("Reversed polish notation: 3, 5, +"));
-        Assert.That(output, Does.Contain("Result: 8"));
+        string output = await RunCalculatorAsync("3 + 5 * 4 - 6 / 3");
+        
+        Assert.That(output, Does.Contain("Tokens: 3, +, 5, *, 4, -, 6, /, 3"));
     }
     
     [Test]
-    public async Task Subtraction()
+    public async Task HasRpn()
     {
-        string output = await RunCalculatorAsync("3-5");
+        string output = await RunCalculatorAsync("3 + 5 * 4 - 6 / 3");
+        
+        Assert.That(output, Does.Contain("Reversed polish notation: 3, 5, 4, *, +, 6, 3, /, -"));
+    }
 
-        // Validate output
-        Assert.That(output, Does.Contain("Tokens: 3, -, 5"));
-        Assert.That(output, Does.Contain("Reversed polish notation: 3, 5, -"));
-        Assert.That(output, Does.Contain("Result: -2"));
+    [Test]
+    public async Task BasicExpression()
+    {
+        string output = await RunCalculatorAsync("3 + 5 * 4 - 6 / 3");
+
+        Assert.That(output, Does.Contain("Tokens: 3, +, 5, *, 4, -, 6, /, 3"));
+        Assert.That(output, Does.Contain("Reversed polish notation: 3, 5, 4, *, +, 6, 3, /, -"));
+        Assert.That(output, Does.Contain("Result: 21"));
     }
     
     [Test]
-    public async Task Multiplication()
+    public async Task StartUnaryMinus()
     {
-        string output = await RunCalculatorAsync("3*5");
-
-        // Validate output
-        Assert.That(output, Does.Contain("Tokens: 3, *, 5"));
-        Assert.That(output, Does.Contain("Reversed polish notation: 3, 5, *"));
+        string output = await RunCalculatorAsync("- 3 + 5 * 4 - 6 / 3");
+        
+        Assert.That(output, Does.Contain("Tokens: 0, -, 3, +, 5, *, 4, -, 6, /, 3"));
+        Assert.That(output, Does.Contain("Reversed polish notation: 0, 3, -, 5, 4, *, +, 6, 3, /, -"));
         Assert.That(output, Does.Contain("Result: 15"));
     }
 
     [Test]
-    public async Task Division()
+    public async Task ExpressionWithBraces()
     {
-        string output = await RunCalculatorAsync("6/2");
-
-        // Validate output
-        Assert.That(output, Does.Contain("Tokens: 6, /, 2"));
-        Assert.That(output, Does.Contain("Reversed polish notation: 6, 2, /"));
-        Assert.That(output, Does.Contain("Result: 3"));
+        string output = await RunCalculatorAsync("3 + 5 * (2 - 8 / (4 - 2))");
+        
+        Assert.That(output, Does.Contain("Tokens: 3, +, 5, *, (, 2, -, 8, /, (, 4, -, 2, ), )"));
+        Assert.That(output, Does.Contain("Reversed polish notation: 3, 5, 2, 8, 4, 2, -, /, -, *, +"));
+        Assert.That(output, Does.Contain("Result: -7"));
     }
     
 }

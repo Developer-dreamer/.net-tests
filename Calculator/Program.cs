@@ -6,7 +6,7 @@ public class Calculator
 {
     public static void Main()
     {
-        // Console.Write("Enter your expression: ");
+        Console.Write("Enter your expression: ");
         string ?expression = Console.ReadLine();
 
         List<string> tokens = Tokenizator.Tokenize(ref expression);

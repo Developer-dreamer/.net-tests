@@ -41,15 +41,14 @@ public static class Helpers
 
     public static bool ComparePriority(string operator1,string token)
     {
-        if (operator1.IsFunc() == token.IsFunc())
-            return operator1.IsFunc()
-                ? Functions[operator1] >= Functions[token]
-                : Operators[char.Parse(operator1)] >= Operators[char.Parse(token)];
-        
-        if (operator1.IsFunc())
-            return Functions[operator1] >= Operators[char.Parse(token)];
-        
-        return Operators[char.Parse(operator1)] >= Functions[token];
+        if (operator1.IsFunc() != token.IsFunc())
+        {
+            if (operator1.IsFunc())
+                return Functions[operator1] >= Operators[char.Parse(token)];
+            return Operators[char.Parse(operator1)] >= Functions[token];
+        }
+    
+        return operator1.IsFunc() ? Functions[operator1] >= Functions[token] : Operators[char.Parse(operator1)] >= Operators[char.Parse(token)];
 
     }
 }

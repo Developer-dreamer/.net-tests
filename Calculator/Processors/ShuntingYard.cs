@@ -43,7 +43,7 @@ public class ShuntingYard
             }
             else if (element.IsOperator())
             {
-                while (_stack.Count != 0 && Helpers.ComparePriority(_stack.Pop(), element))
+                while (_stack.Count != 0 && Helpers.ComparePriority(_stack.Peek(), element))
                 {
                     _queue.Enqueue(_stack.Peek());
                     _stack.Pop();
