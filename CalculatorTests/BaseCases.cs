@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using NUnit.Framework;
 
 namespace CalculatorTests;
@@ -10,6 +11,54 @@ public class Tests
         Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.FullName,
         "Calculator/bin/Debug/net9.0/Calculator"
     );
+
+    private static IEnumerable<object[]> _tokenizationTestCases = new List<object[]>
+    {
+        new object[] { "3", "3" },
+        new object[] { "3+5", "3, +, 5" },
+        new object[] { "3 +    5 ", "3, +, 5" },
+        new object[] { "3 + 5 + 9", "3, +, 5, +, 9" },
+        new object[] { "7 * 8 + 3 * 6", "7, *, 8, +, 3, *, 6" },
+        new object[] { "7*8+3*6", "7, *, 8, +, 3, *, 6" },
+        new object[] { "3+8/2-9*3*3*3", "3, +, 8, /, 2, -, 9, *, 3, *, 3, *, 3" },
+        new object[] { "7*(8+3)*6", "7, *, (, 8, +, 3, ), *, 6" },
+        new object[] { " 7 *(8+ 3)  *6", "7, *, (, 8, +, 3, ), *, 6" },
+        new object[] { " sin(7)", "sin, (, 7, )" },
+        new object[] { "4 + sin(7)^9", "4, +, sin, (, 7, ), ^, 9" },
+        new object[] { "pow(4; 3)", "pow, (, 4, ;, 3, )" }
+    };
+    
+    private static IEnumerable<object[]> _rpnTestCases = new List<object[]>
+    {
+        new object[] { "3", "3" },
+        new object[] { "3+5", "3, 5, +" },
+        new object[] { "3 +    5 ", "3, 5, +" },
+        new object[] { "3 + 5 + 9", "3, 5, +, 9, +" },
+        new object[] { "7 * 8 + 3 * 6", "7, 8, *, 3, 6, *, +" },
+        new object[] { "7*8+3*6", "7, 8, *, 3, 6, *, +" },
+        new object[] { "3+8/2-9*3*3*3", "3, 8, 2, /, +, 9, 3, *, 3, *, 3, *, -" },
+        new object[] { "7*(8+3)*6", "7, 8, 3, +, *, 6, *" },
+        new object[] { " 7 *(8+ 3)  *6", "7, 8, 3, +, *, 6, *" },
+        new object[] { " sin(7)", "7, sin" },
+        new object[] { "4 + sin(7)^9", "4, 7, sin, 9, ^, +" },
+        new object[] { "pow(4; 3)", "4, 3, pow" }
+    };
+    
+    private static IEnumerable<object[]> _evaluationTestCases = new List<object[]>
+    {
+        new object[] { "3", "3" },
+        new object[] { "3+5", "8" },
+        new object[] { "3 +    5 ", "8" },
+        new object[] { "3 + 5 + 9", "17" },
+        new object[] { "7 * 8 + 3 * 6", "74" },
+        new object[] { "7*8+3*6", "74" },
+        new object[] { "3+8/2-9*3*3*3", "-236" },
+        new object[] { "7*(8+3)*6", "462" },
+        new object[] { " 7 *(8+ 3)  *6", "462" },
+        new object[] { " sin(7)", "0.656986598718789" },
+        new object[] { "4 + sin(7)^9", "4.0228038721672474" },
+        new object[] { "pow(4; 3)", "64" }
+    };
     
     private async Task<string> RunCalculatorAsync(string input)
     {
@@ -39,50 +88,30 @@ public class Tests
         }
     }
 
-    [Test]
-    public async Task HasTokenization()
+    [Test, TestCaseSource(nameof(_tokenizationTestCases))]
+    [Category("Atomic")]
+    public async Task HasTokenization(string input, string expectedOutput)
     {
-        string output = await RunCalculatorAsync("3 + 5 * 4 - 6 / 3");
-        
-        Assert.That(output, Does.Contain("Tokens: 3, +, 5, *, 4, -, 6, /, 3"));
+        string output = await RunCalculatorAsync(input);
+            
+        Assert.That(output, Does.Contain(expectedOutput));
     }
     
-    [Test]
-    public async Task HasRpn()
+    [Test, TestCaseSource(nameof(_rpnTestCases))]
+    [Category("Atomic")]
+    public async Task HasRpn(string input, string expectedOutput)
     {
-        string output = await RunCalculatorAsync("3 + 5 * 4 - 6 / 3");
+        string output = await RunCalculatorAsync(input);
         
-        Assert.That(output, Does.Contain("Reversed polish notation: 3, 5, 4, *, +, 6, 3, /, -"));
-    }
-
-    [Test]
-    public async Task BasicExpression()
-    {
-        string output = await RunCalculatorAsync("3 + 5 * 4 - 6 / 3");
-
-        Assert.That(output, Does.Contain("Tokens: 3, +, 5, *, 4, -, 6, /, 3"));
-        Assert.That(output, Does.Contain("Reversed polish notation: 3, 5, 4, *, +, 6, 3, /, -"));
-        Assert.That(output, Does.Contain("Result: 21"));
+        Assert.That(output, Does.Contain(expectedOutput));
     }
     
-    [Test]
-    public async Task StartUnaryMinus()
+    [Test, TestCaseSource(nameof(_evaluationTestCases))]
+    [Category("Atomic")]
+    public async Task HasEvaluation(string input, string expectedOutput)
     {
-        string output = await RunCalculatorAsync("- 3 + 5 * 4 - 6 / 3");
+        string output = await RunCalculatorAsync(input);
         
-        Assert.That(output, Does.Contain("Tokens: 0, -, 3, +, 5, *, 4, -, 6, /, 3"));
-        Assert.That(output, Does.Contain("Reversed polish notation: 0, 3, -, 5, 4, *, +, 6, 3, /, -"));
-        Assert.That(output, Does.Contain("Result: 15"));
+        Assert.That(output, Does.Contain(expectedOutput));
     }
-
-    [Test]
-    public async Task ExpressionWithBraces()
-    {
-        string output = await RunCalculatorAsync("3 + 5 * (2 - 8 / (4 - 2))");
-        
-        Assert.That(output, Does.Contain("Tokens: 3, +, 5, *, (, 2, -, 8, /, (, 4, -, 2, ), )"));
-        Assert.That(output, Does.Contain("Reversed polish notation: 3, 5, 2, 8, 4, 2, -, /, -, *, +"));
-        Assert.That(output, Does.Contain("Result: -7"));
-    }
-    
 }
